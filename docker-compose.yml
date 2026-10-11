@@ -1,0 +1,8 @@
+services:
+  pdf-compressor:
+    build: .
+    container_name: pdf-compressor
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    init: true
