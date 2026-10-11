@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF Shrink — Compress PDF</title>
+  <style>
+    :root { color-scheme: light; --ink:#172033; --muted:#647084; --line:#e4e8ef; --blue:#3659e3; --bg:#f5f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+    header { height:76px; display:flex; align-items:center; justify-content:space-between; padding:0 max(22px,calc((100% - 1080px)/2)); background:#fff; border-bottom:1px solid var(--line); }
+    .brand { font-size:21px; font-weight:800; letter-spacing:-.6px; display:flex; align-items:center; gap:10px; }
+    .logo { display:grid; place-items:center; width:36px;height:36px;border-radius:11px;background:#e9edff;color:var(--blue);font-size:20px; }
+    .tag { color:var(--muted);font-size:13px; }
+    main { width:min(760px,calc(100% - 32px)); margin:58px auto; }
+    .intro { text-align:center; margin-bottom:30px; }
+    h1 { font-size:clamp(30px,5vw,44px); line-height:1.1; letter-spacing:-1.5px; margin:0 0 14px; }
+    .intro p { margin:0;color:var(--muted);font-size:16px;line-height:1.6; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:22px; padding:28px; box-shadow:0 16px 45px #15254b0a; }
+    .drop { display:block; border:2px dashed #cbd4e5; border-radius:16px; padding:34px 20px; text-align:center; cursor:pointer; transition:.18s; background:#fbfcff; }
+    .drop:hover,.drop.drag { border-color:var(--blue);background:#f5f7ff; }
+    .file-icon { width:54px;height:54px;margin:0 auto 12px;display:grid;place-items:center;border-radius:16px;background:#edf0ff;color:var(--blue);font-size:26px; }
+    .drop strong { display:block;font-size:16px;margin-bottom:6px; }
+    .drop span { color:var(--muted);font-size:13px; }
+    input[type=file] { display:none; }
+    .filename { margin-top:12px; color:var(--blue);font-size:13px; overflow-wrap:anywhere; }
+    .settings { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0; }
+    .field label { display:block;font-size:13px;font-weight:700;margin-bottom:9px; }
+    .field input,.field select { width:100%;height:48px;border:1px solid #d8deea;border-radius:11px;padding:0 13px;font:inherit;color:var(--ink);background:#fff; }
+    .hint { color:var(--muted);font-size:12px;line-height:1.5;margin-top:7px; }
+    button { width:100%;border:0;border-radius:12px;background:var(--blue);color:#fff;font-weight:750;font-size:15px;padding:16px;cursor:pointer;box-shadow:0 7px 15px #3659e32a; }
+    button:hover { background:#2948cb; } button:disabled { opacity:.6;cursor:wait; }
+    .error { margin:0 0 18px;padding:12px 14px;border-radius:10px;background:#fff0f0;color:#a12626;font-size:14px; }
+    .features { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px; }
+    .feature { padding:16px;border:1px solid var(--line);border-radius:14px;background:#ffffffa8; }
+    .feature b { display:block;font-size:13px;margin:7px 0 5px; }
+    .feature p { margin:0;color:var(--muted);font-size:12px;line-height:1.5; }
+    .feature .emoji { font-size:19px; }
+    .privacy { text-align:center;color:var(--muted);font-size:12px;line-height:1.6;margin:22px auto 0;max-width:600px; }
+    footer { text-align:center;color:#8490a3;font-size:12px;padding:0 16px 28px; }
+    @media(max-width:560px){ main{margin:36px auto}.panel{padding:18px}.settings,.features{grid-template-columns:1fr}.tag{display:none}header{height:64px} }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="logo">⇩</span> PDF Shrink</div>
+  <div class="tag">Simple · Fast · Target-size compression</div>
+</header>
+<main>
+  <section class="intro">
+    <h1>Make your PDF smaller.</h1>
+    <p>Upload a PDF, choose your target size, and download an optimized copy.<br>Try 20 KB, 100 KB, 200 KB, or any size you need.</p>
+  </section>
+  <section class="panel">
+    {% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+    <form id="compressForm" action="/compress" method="post" enctype="multipart/form-data">
+      <label class="drop" id="dropArea" for="pdfFile">
+        <div class="file-icon">⇧</div>
+        <strong>Choose a PDF or drop it here</strong>
+        <span>PDF files only · Maximum 100 MB</span>
+        <div class="filename" id="fileName"></div>
+      </label>
+      <input id="pdfFile" type="file" name="pdf" accept="application/pdf,.pdf" required>
+      <div class="settings">
+        <div class="field">
+          <label for="target">Target file size</label>
+          <input id="target" name="target_kb" type="number" min="1" max="500000" step="1" value="20" required>
+          <div class="hint">Enter the maximum size you want in KB.</div>
+        </div>
+        <div class="field">
+          <label for="preset">Quick target</label>
+          <select id="preset">
+            <option value="20">20 KB</option>
+            <option value="50">50 KB</option>
+            <option value="100">100 KB</option>
+            <option value="200">200 KB</option>
+            <option value="500">500 KB</option>
+            <option value="1024">1 MB (1024 KB)</option>
+          </select>
+          <div class="hint">Selecting a preset fills the target size field.</div>
+        </div>
+      </div>
+      <button id="submitBtn" type="submit">Compress PDF</button>
+    </form>
+  </section>
+  <section class="features">
+    <div class="feature"><span class="emoji">🎯</span><b>Choose your target</b><p>Set a size such as 20 KB or enter a custom KB value.</p></div>
+    <div class="feature"><span class="emoji">⚙️</span><b>Smart optimization</b><p>Optimizes PDF structure and tries image compression at multiple quality levels.</p></div>
+    <div class="feature"><span class="emoji">🔒</span><b>Private processing</b><p>Files are processed for the request and are not intentionally saved to a file directory.</p></div>
+  </section>
+  <p class="privacy">Important: the target is a goal, not a guarantee. Some PDFs cannot be reduced to 20 KB without losing readability or removing content. Always check the downloaded PDF before submitting it.</p>
+</main>
+<footer>PDF Shrink · PDF files stay in memory during normal processing.</footer>
+<script>
+const fileInput = document.getElementById('pdfFile');
+const fileName = document.getElementById('fileName');
+const dropArea = document.getElementById('dropArea');
+const form = document.getElementById('compressForm');
+const btn = document.getElementById('submitBtn');
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files[0];
+  fileName.textContent = f ? `${f.name} · ${(f.size / 1024).toFixed(1)} KB` : '';
+});
+document.getElementById('preset').addEventListener('change', e => {
+  document.getElementById('target').value = e.target.value;
+});
+['dragenter','dragover'].forEach(ev => dropArea.addEventListener(ev, e => {
+  e.preventDefault(); dropArea.classList.add('drag');
+}));
+['dragleave','drop'].forEach(ev => dropArea.addEventListener(ev, e => {
+  e.preventDefault(); dropArea.classList.remove('drag');
+}));
+dropArea.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if (f && (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'))) {
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change'));
+  } else {
+    fileName.textContent = 'Please drop a PDF file.';
+  }
+});
+form.addEventListener('submit', () => {
+  btn.disabled = true;
+  btn.textContent = 'Compressing PDF…';
+});
+</script>
+</body>
+</html>
